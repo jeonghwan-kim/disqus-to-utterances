@@ -1,5 +1,5 @@
 import { Post, Thread } from "./disqus";
-import { dateFormat, idFormat } from "./helpers";
+import { dateFormat, idFormat, urlToPathname } from "./helpers";
 
 export interface Issue {
   postId: string;
@@ -75,27 +75,25 @@ export const mergeDuplicate = (issues: Issue[], issue: Issue) => {
     (i) => i.postTitle === issue.postTitle
   );
 
-  if (!issueHasDuplicated) {
-    return [...issues, issue];
+  if (issueHasDuplicated) {
+    issueHasDuplicated.comments.push(...issue.comments);
+    return issues;
   }
 
-  const url = new URL(issueHasDuplicated.postUrl).pathname.replace(
-    /^\/\//,
-    "/"
-  );
-  issueHasDuplicated.postUrl = url.toString();
-  issueHasDuplicated.comments.push(...issue.comments);
-  return issues;
+  return [...issues, issue];
 };
 
-export const issueToString = (
-  { postTitle, createdAt, comments }: Issue,
-  index: number
-) =>
+export const issueToString = ({
+  postTitle,
+  postUrl,
+  createdAt,
+  comments,
+}: Issue) =>
   [
-    `${idFormat(index + 1)} ${dateFormat(createdAt)} ${postTitle}`,
+    `${dateFormat(createdAt)} ${postTitle}`,
+    `${postUrl}`,
     comments
-      .map((comment, index) => commentToString(comment, index, "    "))
+      .map((comment, index) => commentToString(comment, index, "  "))
       .join("\n"),
   ].join("\n");
 
@@ -106,6 +104,5 @@ const commentToString = (
 ): string =>
   [
     `${prefix}${idFormat(index + 1)} ${message.slice(0, 40)}`,
-    `작성일: ${dateFormat(createdAt)}`,
-    `작성자: ${author.name}(${author.userName})`,
+    `${prefix}    ${dateFormat(createdAt)} ${author.name}(${author.userName})`,
   ].join("\n");

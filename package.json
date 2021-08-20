@@ -10,6 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/prompts": "^2.0.14",
+    "axios": "^0.21.1",
+    "dayjs": "^1.10.6",
+    "prompts": "^2.4.1",
     "ts-node": "^10.2.0",
     "typescript": "^4.3.5",
     "xml2js": "^0.4.23"
