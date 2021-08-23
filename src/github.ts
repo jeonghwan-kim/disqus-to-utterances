@@ -5,23 +5,21 @@ export interface Issue {
   postId: string;
   postUrl: string;
   postTitle: string;
-  postAuthor: {
-    name: string;
-    userName: string;
-    isAnonymous: boolean;
-  };
+  postAuthor: Writer;
   createdAt: string;
   comments: Comment[];
+}
+
+export interface Writer {
+  name: string;
+  userName: string;
+  isAnonymous: boolean;
 }
 
 export interface Comment {
   message: string;
   createdAt: string;
-  author: {
-    name: string;
-    userName: string;
-    isAnonymous: boolean;
-  };
+  author: Writer;
 }
 
 export const createIssue = (thread: Thread): Issue => ({
@@ -83,15 +81,9 @@ export const mergeDuplicate = (issues: Issue[], issue: Issue) => {
   return [...issues, issue];
 };
 
-export const issueToString = ({
-  postTitle,
-  postUrl,
-  createdAt,
-  comments,
-}: Issue) =>
+export const issueToString = ({ postTitle, createdAt, comments }: Issue) =>
   [
     `${dateFormat(createdAt)} ${postTitle}`,
-    `${postUrl}`,
     comments
       .map((comment, index) => commentToString(comment, index, "  "))
       .join("\n"),
@@ -103,6 +95,6 @@ const commentToString = (
   prefix = ""
 ): string =>
   [
-    `${prefix}${idFormat(index + 1)} ${message.slice(0, 40)}`,
+    `${prefix}${idFormat(index + 1)} ${message.slice(0, 100)}`,
     `${prefix}    ${dateFormat(createdAt)} ${author.name}(${author.userName})`,
   ].join("\n");

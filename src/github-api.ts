@@ -65,7 +65,8 @@ export const issueTitle = ({ postUrl }: Issue): string =>
   urlToPathname(postUrl);
 
 export const issueBody = ({ postTitle, postUrl }: Issue): string => `
-${postTitle}
+# ${postTitle}
+
 ${postUrl}
 `;
 

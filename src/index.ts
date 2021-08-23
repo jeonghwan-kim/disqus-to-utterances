@@ -1,5 +1,4 @@
 import { resolve } from "path";
-import prompt from "prompt-sync";
 import prompts from "prompts";
 import { activeThread, loadDisqusXml, xmlToJson } from "./disqus";
 import {
@@ -46,7 +45,7 @@ const createIssueAndComments = async (issue: Issue) => {
     const xml = await loadDisqusXml(resolve(__dirname, "../disqus.xml"));
     const { thread, post } = await xmlToJson(xml);
 
-    console.log("thread: ", thread.length, "post: ", post.length);
+    process.stdout.write(`thread: ${thread.length}, post: ${post.length}\n`);
 
     const issues: Issue[] = thread
       .filter(activeThread)
@@ -74,7 +73,7 @@ const createIssueAndComments = async (issue: Issue) => {
     // });
 
     for await (const issue of issues) {
-      process.stdout.write(issueToString(issue));
+      process.stdout.write(`\n${issueToString(issue)}\n`);
 
       const { yn } = await prompts({
         type: "text",

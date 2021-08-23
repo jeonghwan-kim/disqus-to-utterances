@@ -19,13 +19,15 @@ export interface Thread {
   link: [string];
   title: [string];
   createdAt: [string];
-  author: {
-    name: [string];
-    isAnonymous: ["false" | "true"];
-    username: [string];
-  }[];
+  author: Author[];
   isClosed: ["false" | "true"];
   isDeleted: ["false" | "true"];
+}
+
+export interface Author {
+  name: [string];
+  isAnonymous: ["false" | "true"];
+  username: [string];
 }
 
 /**
@@ -36,11 +38,7 @@ export interface Post {
   createdAt: [string];
   isDeleted: ["false" | "true"];
   isSpam: ["false" | "true"];
-  author: {
-    name: [string];
-    isAnonymous: ["false" | "true"];
-    username: [string];
-  }[];
+  author: Author[];
   thread: {
     $: {
       "dsq:id": string;
