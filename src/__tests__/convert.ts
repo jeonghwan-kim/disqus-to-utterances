@@ -1,18 +1,17 @@
+import dayjs from "dayjs";
 import faker from "faker";
 import {
-  buildAuthorXml,
   buildDisqusXml,
   buildPostXml,
   buildThreadXml,
 } from "../../test/genrate";
 import { convert } from "../convert";
-import { dateFormat } from "../helpers";
 
 function ready() {
   const fakeThreadId = faker.datatype.uuid();
   const fakeThreadLink = faker.internet.url();
   const fakeThreadTitle = faker.name.title();
-  const fakeThreadCreatedAt = dateFormat(faker.date.recent().toISOString());
+  const fakeThreadCreatedAt = new Date().toISOString();
   const fakeThreadAuthorName = faker.name.firstName();
   const fakeThreadeAuthorUserName = faker.internet.userAgent();
   const threadXml = [
@@ -32,7 +31,7 @@ function ready() {
   ];
 
   const fakeCommentMessage = faker.lorem.sentences();
-  const fakeCommentCreatedAt = dateFormat(faker.date.recent().toISOString());
+  const fakeCommentCreatedAt = faker.date.recent().toISOString();
   const fakeCommentName = faker.name.findName();
   const fakeCommentUserName = faker.internet.userName();
   const postXml = [
@@ -128,6 +127,84 @@ test("convert: 연관된 커맨트를 이슈에 연결한다", async () => {
   expect(actual[0].comments[0].message).toBe(fakeCommentMessage);
 });
 
-test.todo("conver: 이슈를 시간 역순으로 정렬한다");
-test.todo("conver: 댓글 없는 이슈는 제외한다");
-test.todo("conver: 중복 타이틀이 있는 이슈는 하나로 병합한다");
+test("conver: 이슈를 시간순으로 정렬한다", async () => {
+  const { threadXml, postXml } = ready();
+  const extraThreadXmls = [
+    buildThreadXml({
+      createdAt: [dayjs().subtract(2, "day").toISOString()],
+      $: { "dsq:id": "1" },
+    }),
+    buildThreadXml({
+      createdAt: [dayjs().subtract(1, "day").toISOString()],
+      $: { "dsq:id": "2" },
+    }),
+  ];
+  const extraPostXmls = [
+    buildPostXml({ thread: [{ $: { "dsq:id": "1" } }] }),
+    buildPostXml({ thread: [{ $: { "dsq:id": "2" } }] }),
+  ];
+  const disqusXml = buildDisqusXml({
+    threadXml: [...threadXml, ...extraThreadXmls],
+    postXml: [...postXml, ...extraPostXmls],
+  });
+
+  const issues = await convert(disqusXml);
+
+  issues.reduce((prevTime, issue, index) => {
+    const nextTime = new Date(issue.createdAt).getTime();
+    console.log(index, prevTime, nextTime);
+    expect(prevTime <= nextTime).toBe(true);
+    return nextTime;
+  }, 0);
+});
+
+test("conver: 댓글 없는 이슈는 제외한다", async () => {
+  const { threadXml, postXml } = ready();
+  const extraThreadXmls = [
+    buildThreadXml({
+      createdAt: [dayjs().subtract(2, "day").toISOString()],
+      $: { "dsq:id": "1" },
+    }),
+    buildThreadXml({
+      createdAt: [dayjs().subtract(1, "day").toISOString()],
+      $: { "dsq:id": "2" },
+    }),
+  ];
+
+  const disqusXml = buildDisqusXml({
+    threadXml: [...threadXml, ...extraThreadXmls],
+    postXml: [...postXml],
+  });
+
+  const issues = await convert(disqusXml);
+
+  expect(issues.length).toBe(threadXml.length);
+});
+
+test("conver: 중복 타이틀이 있는 이슈는 하나로 병합한다", async () => {
+  const { threadXml, postXml } = ready();
+  const extraThreadXmls = [
+    buildThreadXml({
+      createdAt: [dayjs().subtract(2, "day").toISOString()],
+      $: { "dsq:id": "1" },
+      title: ["중복 타이틀"],
+    }),
+    buildThreadXml({
+      createdAt: [dayjs().subtract(1, "day").toISOString()],
+      title: ["중복 타이틀"],
+      $: { "dsq:id": "2" },
+    }),
+  ];
+  const extraPostXmls = [
+    buildPostXml({ thread: [{ $: { "dsq:id": "1" } }] }),
+    buildPostXml({ thread: [{ $: { "dsq:id": "2" } }] }),
+  ];
+  const disqusXml = buildDisqusXml({
+    threadXml: [...threadXml, ...extraThreadXmls],
+    postXml: [...postXml, ...extraPostXmls],
+  });
+
+  const issues = await convert(disqusXml);
+
+  expect(issues.length).toBe(threadXml.length + 1);
+});
