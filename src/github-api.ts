@@ -1,14 +1,7 @@
 import axios from "axios";
+import { Env } from "./env";
 import { Comment, Issue } from "./github";
 import { dateFormat, urlToPathname } from "./helpers";
-
-const owner = "jeonghwan-kim";
-const repo = "jeonghwan-kim.github.com";
-
-const headers = {
-  Accept: "application/vnd.github.v3+json",
-  Authorization: "token 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",
-};
 
 interface CreateIssueResponse {
   id: number;
@@ -33,15 +26,22 @@ interface CreateCommentResponse {
   body: string;
 }
 
+function headers() {
+  return {
+    Accept: "application/vnd.github.v3+json",
+    Authorization: `token ${Env.githubApiToken}`,
+  };
+}
+
 export default class GithubApi {
   static async createIssue(
     title: string,
     body: string
   ): Promise<CreateIssueResponse> {
     const { data } = await axios.post<CreateIssueResponse>(
-      `https://api.github.com/repos/${owner}/${repo}/issues`,
+      `https://api.github.com/repos/${Env.githubUser}/${Env.githubRepo}/issues`,
       { title, body, labels: ["Comment"] },
-      { headers }
+      { headers: headers() }
     );
 
     return data;
@@ -52,9 +52,9 @@ export default class GithubApi {
     body: string
   ): Promise<CreateCommentResponse> {
     const { data } = await axios.post<CreateCommentResponse>(
-      `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}/comments`,
+      `https://api.github.com/repos/${Env.githubUser}/${Env.githubRepo}/issues/${issueNumber}/comments`,
       { body },
-      { headers }
+      { headers: headers() }
     );
 
     return data;

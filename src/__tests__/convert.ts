@@ -152,7 +152,6 @@ test("conver: 이슈를 시간순으로 정렬한다", async () => {
 
   issues.reduce((prevTime, issue, index) => {
     const nextTime = new Date(issue.createdAt).getTime();
-    console.log(index, prevTime, nextTime);
     expect(prevTime <= nextTime).toBe(true);
     return nextTime;
   }, 0);

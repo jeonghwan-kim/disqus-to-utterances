@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import { Post, Thread } from "./disqus";
 import { dateFormat, idFormat, urlToPathname } from "./helpers";
 
@@ -83,7 +84,7 @@ export const mergeDuplicate = (issues: Issue[], issue: Issue) => {
 
 export const issueToString = ({ postTitle, createdAt, comments }: Issue) =>
   [
-    `${dateFormat(createdAt)} ${postTitle}`,
+    chalk.cyan.bold(`${dateFormat(createdAt)} ${postTitle}`),
     comments
       .map((comment, index) => commentToString(comment, index, "  "))
       .join("\n"),
@@ -95,6 +96,8 @@ const commentToString = (
   prefix = ""
 ): string =>
   [
-    `${prefix}${idFormat(index + 1)} ${message.slice(0, 100)}`,
-    `${prefix}    ${dateFormat(createdAt)} ${author.name}(${author.userName})`,
+    `${prefix}${idFormat(index + 1)} ${dateFormat(createdAt)} ${author.name}(${
+      author.userName
+    })`,
+    `${prefix}    ${message.slice(0, 100)}`,
   ].join("\n");

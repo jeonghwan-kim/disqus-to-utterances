@@ -7,3 +7,6 @@ export const dateFormat = (date: string): string =>
 
 export const urlToPathname = (url: string): string =>
   new URL(url).pathname.replace(/^\//g, "");
+
+export const println = (message: string = "") =>
+  process.stdout.write(`${message}\n`);

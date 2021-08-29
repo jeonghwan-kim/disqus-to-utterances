@@ -1,6 +1,8 @@
+import chalk from "chalk";
 import { resolve } from "path";
 import prompts from "prompts";
 import { activeThread, loadDisqusXml, xmlToJson } from "./disqus";
+import { Env } from "./env";
 import {
   attachCommentOnIssue,
   createIssue,
@@ -11,41 +13,59 @@ import {
   sortByCreatedAtAsc,
 } from "./github";
 import GithubApi, { commentBody, issueBody, issueTitle } from "./github-api";
+import { println } from "./helpers";
 
 const createIssueAndComments = async (issue: Issue) => {
-  process.stdout.write(">>> 이슈 생성 중 ...\n");
+  println();
+  println(">>> 이슈 생성 중 ...");
+
   const { number, html_url } = await GithubApi.createIssue(
     issueTitle(issue),
     issueBody(issue)
   );
-  process.stdout.write(`<<< 이슈 생성 완료(${number}): ${html_url}\n`);
 
-  process.stdout.write(`>>> 댓글 생성 중 ...\n`);
-  // issue.comments.forEach(async (comment, index) => {
-  //   const { html_url } = await GithubApi.createComment(
-  //     number,
-  //     commentBody(comment)
-  //   );
-  //   process.stdout.write(`[${index + 1}] ${html_url}\n`);
-  // });
+  println(html_url);
+  println(`<<< 이슈 생성 완료: `);
+
+  println(`>>> 댓글 생성 중 ...`);
 
   for await (const comment of issue.comments) {
     const { html_url } = await GithubApi.createComment(
       number,
       commentBody(comment)
     );
-    process.stdout.write(`${html_url}\n`);
+    println(`${html_url}`);
   }
 
-  process.stdout.write(`<<< 댓글 생성 완료\n`);
+  println(`<<< 댓글 생성 완료`);
 };
 
-(async () => {
+const usage = (): string => {
+  return `usage npm start disqus-backup-file-path`;
+};
+
+export const run = async () => {
+  Env.disqusBackupFilePath = process.argv[2];
+  if (!Env.disqusBackupFilePath) {
+    println(usage());
+    process.exit(0);
+  }
+
+  await Env.prompt();
+
   try {
-    const xml = await loadDisqusXml(resolve(__dirname, "../disqus.xml"));
+    println(`disqus.xml 파일 로딩 중...`);
+
+    const xml = await loadDisqusXml(
+      resolve(__dirname, "..", Env.disqusBackupFilePath)
+    );
     const { thread, post } = await xmlToJson(xml);
 
-    process.stdout.write(`thread: ${thread.length}, post: ${post.length}\n`);
+    println(
+      `disqus.xml 파일 로딩 완료: ${chalk.cyan.bold(
+        thread.length
+      )}개 포스트와  ${chalk.cyan.bold(post.length)}개 댓글을 찾았습니다.`
+    );
 
     const issues: Issue[] = thread
       .filter(activeThread)
@@ -55,34 +75,22 @@ const createIssueAndComments = async (issue: Issue) => {
       .filter(hasComments)
       .reduce<Issue[]>(mergeDuplicate, []);
 
-    // issues.forEach(async (issue) => {
-    //   process.stdout.write(issueToString(issue));
-
-    //   const { yn } = await prompts({
-    //     type: "text",
-    //     name: "yn",
-    //     message: "\n이 포스트와 댓글을 깃헙에 생성할까요?(y/N/q)",
-    //   });
-    //   if (yn.toLowerCase() === "q") {
-    //     process.exit(0);
-    //   }
-    //   if (yn.toLowerCase() === "y") {
-    //     // await createIssueAndComments(issue);
-    //     console.log("ik");
-    //   }
-    // });
-
     for await (const issue of issues) {
-      process.stdout.write(`\n${issueToString(issue)}\n`);
+      println(`\n${issueToString(issue)}`);
+      println();
 
       const { yn } = await prompts({
         type: "text",
         name: "yn",
-        message: "\n이 포스트와 댓글을 깃헙에 생성할까요?(y/N/q)",
+        message: "이 포스트와 댓글을 깃헙에 생성할까요?(y/N/q)",
+        initial: "n",
       });
-      if (yn.toLowerCase() === "q") {
+
+      if (!yn || yn.toLowerCase() === "q") {
+        println("프로그램을 종료합니다.");
         process.exit(0);
       }
+
       if (yn.toLowerCase() === "y") {
         await createIssueAndComments(issue);
       }
@@ -90,9 +98,6 @@ const createIssueAndComments = async (issue: Issue) => {
   } catch (e) {
     console.error(e);
   }
+};
 
-  try {
-  } catch (e) {
-    console.error(e);
-  }
-})();
+run();
