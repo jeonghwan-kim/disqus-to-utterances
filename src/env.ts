@@ -5,11 +5,11 @@ import { println } from "./helpers";
 export class Env {
   static githubUser: string;
   static githubRepo: string;
-  static githubApiToken: string;
+  static githubAccessToken: string;
   static disqusBackupFilePath: string;
 
   static get satisfied(): boolean {
-    return !!Env.githubUser && !!Env.githubRepo && !!Env.githubApiToken;
+    return !!Env.githubUser && !!Env.githubRepo && !!Env.githubAccessToken;
   }
 
   static async prompt() {
@@ -21,10 +21,10 @@ export class Env {
       type: "confirm",
       name: "value",
       message: [
-        `입력한 정보가 맞습니까?`,
+        `Is the information you entered corrent?`,
         `  githubUser: ${chalk.bold.cyan(Env.githubUser)}`,
         `  githubRepo: ${chalk.bold.cyan(Env.githubRepo)}`,
-        `  githubApiToken: ${chalk.bold.cyan(Env.githubApiToken)}`,
+        `  githubAccessToken: ${chalk.bold.cyan(Env.githubAccessToken)}`,
       ].join("\n"),
     });
 
@@ -37,7 +37,7 @@ export class Env {
     const { value } = await prompts({
       type: "text",
       name: "value",
-      message: "깃헙 사용자 이름을 입력하세요.",
+      message: "Enter your Giuthub username.",
     });
 
     Env.githubUser = value;
@@ -49,7 +49,7 @@ export class Env {
     const { value } = await prompts({
       type: "text",
       name: "value",
-      message: "깃헙 저장소 이름을 입력하세요.",
+      message: "Enter the github repository name.",
     });
 
     Env.githubRepo = value;
@@ -63,9 +63,9 @@ export class Env {
       type: "text",
       name: "value",
       message:
-        "깃헙 API 토큰을 입력하세요. 이슈와 댓글을 생성하는데 사용합니다.",
+        "Enter your Github personal sccess token. Used to create issues and comments",
     });
 
-    Env.githubApiToken = value;
+    Env.githubAccessToken = value;
   }
 }

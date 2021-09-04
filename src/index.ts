@@ -17,7 +17,7 @@ import { println } from "./helpers";
 
 const createIssueAndComments = async (issue: Issue) => {
   println();
-  println(">>> 이슈 생성 중 ...");
+  println(">>> Creating a github issue ...");
 
   const { number, html_url } = await GithubApi.createIssue(
     issueTitle(issue),
@@ -25,9 +25,9 @@ const createIssueAndComments = async (issue: Issue) => {
   );
 
   println(html_url);
-  println(`<<< 이슈 생성 완료: `);
+  println(`<<< Github issue created.`);
 
-  println(`>>> 댓글 생성 중 ...`);
+  println(`>>> Creating github issue comments ...`);
 
   for await (const comment of issue.comments) {
     const { html_url } = await GithubApi.createComment(
@@ -37,11 +37,11 @@ const createIssueAndComments = async (issue: Issue) => {
     println(`${html_url}`);
   }
 
-  println(`<<< 댓글 생성 완료`);
+  println(`<<< Github issue comments created.`);
 };
 
 const usage = (): string => {
-  return `usage npm start disqus-backup-file-path`;
+  return `Usage: npm start disqus-backup-file-path`;
 };
 
 export const run = async () => {
@@ -54,7 +54,7 @@ export const run = async () => {
   await Env.prompt();
 
   try {
-    println(`disqus.xml 파일 로딩 중...`);
+    println(`Loading disqus backup file(${Env.disqusBackupFilePath}) ...`);
 
     const xml = await loadDisqusXml(
       resolve(__dirname, "..", Env.disqusBackupFilePath)
@@ -62,9 +62,11 @@ export const run = async () => {
     const { thread, post } = await xmlToJson(xml);
 
     println(
-      `disqus.xml 파일 로딩 완료: ${chalk.cyan.bold(
-        thread.length
-      )}개 포스트와  ${chalk.cyan.bold(post.length)}개 댓글을 찾았습니다.`
+      `Disqus backup file(${
+        Env.disqusBackupFilePath
+      }) loaded: ${chalk.cyan.bold(thread.length)} posts and  ${chalk.cyan.bold(
+        post.length
+      )} comments found.`
     );
 
     const issues: Issue[] = thread
@@ -82,12 +84,12 @@ export const run = async () => {
       const { yn } = await prompts({
         type: "text",
         name: "yn",
-        message: "이 포스트와 댓글을 깃헙에 생성할까요?(y/N/q)",
+        message: "Create this post and comments on github?(y/N/q)",
         initial: "n",
       });
 
       if (!yn || yn.toLowerCase() === "q") {
-        println("프로그램을 종료합니다.");
+        println("Quit the program.");
         process.exit(0);
       }
 

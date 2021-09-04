@@ -19,6 +19,7 @@ Make sure you have these ready
 
 - [Disqus backup file(xml)](https://help.disqus.com/en/articles/1717164-comments-export)
 - [node.js](https://nodejs.org/en/)
+- [Github personal access token(repo scope)](https://github.com/settings/tokens)
 
 ## How to use it
 

@@ -29,7 +29,7 @@ interface CreateCommentResponse {
 function headers() {
   return {
     Accept: "application/vnd.github.v3+json",
-    Authorization: `token ${Env.githubApiToken}`,
+    Authorization: `token ${Env.githubAccessToken}`,
   };
 }
 
@@ -77,7 +77,7 @@ export const commentBody = ({
 }: Comment): string => `
 ${message}
 
->_Disqus에서 작성한 댓글입니다. ${dateFormat(createdAt)} ${author.name}(${
+>_This comment was made by Disqus. ${dateFormat(createdAt)} ${author.name}(${
   author.userName
 })_
 `;
